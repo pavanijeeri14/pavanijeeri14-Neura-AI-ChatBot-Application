@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "498345012436",
+    "project_id": "llama2025",
+    "storage_bucket": "llama2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498345012436:android:9b9a0a4e6f702cc99c1f41",
+        "android_client_info": {
+          "package_name": "com.llama.bot.llama_bot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlDi1f9K_Rwtg5dqBfcwMb2ZShnHr8vh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,2 @@
+W:/AndroidStudio/llama_bot/android/app/.cxx/Debug/2ua2g6p2/armeabi-v7a/CMakeFiles/edit_cache.dir
+W:/AndroidStudio/llama_bot/android/app/.cxx/Debug/2ua2g6p2/armeabi-v7a/CMakeFiles/rebuild_cache.dir
