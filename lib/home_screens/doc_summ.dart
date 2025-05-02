@@ -28,7 +28,8 @@ class _DocSummaryScreenState extends State<DocSummaryScreen> {
       });
     });
   }
-
+  
+  //Api calls
   Future<void> summarize() async {
     if (_textController.text.isEmpty) return;
     setState(() {

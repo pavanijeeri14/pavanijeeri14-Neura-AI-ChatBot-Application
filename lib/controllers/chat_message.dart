@@ -4,12 +4,12 @@ import 'dart:async';
 class ChatMessage extends StatefulWidget {
   final String text;
   final bool isUser;
-  final bool isTyping; // New property for typing animation
+  final bool isTyping;
 
   const ChatMessage({
     required this.text,
     required this.isUser,
-    this.isTyping = false, // Default is false
+    this.isTyping = false,
     Key? key,
   }) : super(key: key);
 
@@ -25,9 +25,11 @@ class _ChatMessageState extends State<ChatMessage> {
   void initState() {
     super.initState();
     if (widget.isTyping) {
-      _startTypingEffect();
-    } else {
+      animatedText = "";
+    } else if (widget.isUser) {
       animatedText = widget.text;
+    } else {
+      _startTypingEffect();
     }
   }
 
@@ -60,11 +62,13 @@ class _ChatMessageState extends State<ChatMessage> {
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(animatedText,
-                      style: TextStyle(
-                        color: widget.isUser ? Colors.white : Colors.black,
-                        fontSize: 16,
-                      )),
+                  Text(
+                    "Typing",
+                    style: TextStyle(
+                      color: widget.isUser ? Colors.white : Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
                   SizedBox(width: 5),
                   AnimatedDots(),
                 ],
@@ -81,7 +85,6 @@ class _ChatMessageState extends State<ChatMessage> {
   }
 }
 
-// Dots animation for "Typing..." effect
 class AnimatedDots extends StatefulWidget {
   @override
   _AnimatedDotsState createState() => _AnimatedDotsState();

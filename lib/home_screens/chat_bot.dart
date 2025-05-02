@@ -1,161 +1,106 @@
-import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:llama_bot/controllers/chat_message.dart';
 
-void main() {
-  runApp(AIChatApp());
-}
 
-class AIChatApp extends StatelessWidget {
+class ChatBotPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Neura AI Chat', 
-      theme: ThemeData.dark(),
-      home: ChatScreen(),
-    );
-  }
+  _ChatBotPageState createState() => _ChatBotPageState();
 }
 
-class ChatMessage extends StatelessWidget {
-  final String text;
-  final bool isUser;
-
-  ChatMessage({required this.text, required this.isUser});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        padding: EdgeInsets.all(12),
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        decoration: BoxDecoration(
-          color: isUser ? const Color.fromARGB(255, 179, 132, 250) : const Color.fromARGB(255, 212, 195, 255),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0), fontSize: 16),
-        ),
-      ),
-    );
-  }
-}
-
-class ChatScreen extends StatefulWidget {
-  @override
-  _ChatScreenState createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatBotPageState extends State<ChatBotPage> {
   final TextEditingController _controller = TextEditingController();
-  final List<ChatMessage> _messages = [];
-  bool isLoading = false;
+  bool _isTyping = false;
 
-  // Gemini API Key
-  final String apiKey = 'AIzaSyDIPkhmR0cZ5IdIyRCMr-OYve8LavqYDro'; 
-  final String baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty) return;
 
-  // Send user message
-  Future<void> _sendMessage() async {
-    if (_controller.text.isEmpty) return;
-
-    String userQuery = _controller.text;
-
-    setState(() {
-      _messages.insert(0, ChatMessage(text: userQuery, isUser: true));
-      isLoading = true;
+    // Add user message
+    await FirebaseFirestore.instance.collection('chats').add({
+      'text': text,
+      'isUser': true,
+      'timestamp': FieldValue.serverTimestamp(),
     });
 
     _controller.clear();
-    await _getGeminiResponse(userQuery);
+
+    // Show typing indicator
+    setState(() => _isTyping = true);
+    final typingDoc = await FirebaseFirestore.instance.collection('chats').add({
+      'text': '',
+      'isUser': false,
+      'timestamp': FieldValue.serverTimestamp(),
+      'isTyping': true,
+    });
+
+    // Simulate delay and AI response
+    await Future.delayed(Duration(seconds: 2)); // Replace with actual API call
+
+    // Delete typing indicator
+    await FirebaseFirestore.instance.collection('chats').doc(typingDoc.id).delete();
+
+    // Add AI response
+    await FirebaseFirestore.instance.collection('chats').add({
+      'text': 'Hello, I am your AI assistant!',
+      'isUser': false,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    setState(() => _isTyping = false);
   }
 
-  // Fetch AI response
-  Future<void> _getGeminiResponse(String userQuery) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl?key=$apiKey'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'contents': [
-            {
-              'parts': [
-                {'text': userQuery}
-              ]
-            }
-          ]
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        String botResponse = data['candidates'][0]['content']['parts'][0]['text'] ?? 'No response received';
-
-        setState(() {
-          _messages.insert(0, ChatMessage(text: botResponse, isUser: false));
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          _messages.insert(0, ChatMessage(text: 'Error: API response failed!', isUser: false));
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _messages.insert(0, ChatMessage(text: 'Error: $e', isUser: false));
-        isLoading = false;
-      });
-    }
+  Widget _buildMessage(Map<String, dynamic> message) {
+    return ChatMessage(
+      text: message['text'] ?? '',
+      isUser: message['isUser'] ?? false,
+      isTyping: message['isTyping'] ?? false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Neura AI Chat",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.deepPurple,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text("Neura AI Chat")),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              reverse: true,
-              padding: EdgeInsets.all(10),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) => _messages[index],
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('chats')
+                  .orderBy('timestamp')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+
+                final messages = snapshot.data!.docs;
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final data = messages[index].data() as Map<String, dynamic>;
+                    return _buildMessage(data);
+                  },
+                );
+              },
             ),
           ),
-          if (isLoading) CircularProgressIndicator(),
           Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: "Type a message...",
-                      filled: true,
-                      fillColor: const Color.fromARGB(255, 249, 249, 249),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                      hintText: 'Ask something...',
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
                 SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.send, color: const Color.fromARGB(255, 142, 33, 243)),
-                  onPressed: _sendMessage,
+                  icon: Icon(Icons.send, color: Colors.deepPurple),
+                  onPressed: () => _sendMessage(_controller.text),
                 ),
               ],
             ),

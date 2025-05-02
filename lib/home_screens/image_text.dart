@@ -14,12 +14,36 @@ class _ImageToTextScreenState extends State<ImageToTextScreen> {
   File? _selectedImage;
   String _extractedText = "Text will appear here";
 
-  Future<void> _pickAndExtractText(ImageSource source) async {
+  Future<void> _pickAndPreviewImage(ImageSource source) async {
     final image = await ImagePickerHelper.pickImage(source);
     if (image != null) {
-      setState(() => _selectedImage = image);
-      _extractTextFromImage(image);
+      _showImagePreview(image, isBeforeProcessing: true);
     }
+  }
+
+  void _showImagePreview(File image, {bool isBeforeProcessing = false}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Preview Image"),
+        content: Image.file(image, height: 300),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: Text("Cancel"),
+          ),
+          if (isBeforeProcessing)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() => _selectedImage = image);
+                _extractTextFromImage(image);
+              },
+              child: Text("Proceed"),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _extractTextFromImage(File imageFile) async {
@@ -48,12 +72,10 @@ class _ImageToTextScreenState extends State<ImageToTextScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Image to Text", 
-      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-      //backgroundColor: Color.fromARGB(255, 193, 147, 253),
-      backgroundColor: Colors.deepPurple,
-      centerTitle: true,
+      appBar: AppBar(
+        title: Text("Image to Text", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.deepPurple,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -61,7 +83,13 @@ class _ImageToTextScreenState extends State<ImageToTextScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _selectedImage != null
-                ? Image.file(_selectedImage!, height: 200)
+                ? GestureDetector(
+                    onTap: () => _showImagePreview(_selectedImage!),
+                    child: Hero(
+                      tag: "preview",
+                      child: Image.file(_selectedImage!, height: 200),
+                    ),
+                  )
                 : Icon(Icons.image, size: 100, color: Colors.grey),
             SizedBox(height: 10),
             Row(
@@ -70,13 +98,13 @@ class _ImageToTextScreenState extends State<ImageToTextScreen> {
                 TextButton.icon(
                   icon: Icon(Icons.camera),
                   label: Text("Capture Image"),
-                  onPressed: () => _pickAndExtractText(ImageSource.camera),
+                  onPressed: () => _pickAndPreviewImage(ImageSource.camera),
                 ),
                 SizedBox(width: 10),
                 TextButton.icon(
                   icon: Icon(Icons.photo_library),
                   label: Text("Pick from Gallery"),
-                  onPressed: () => _pickAndExtractText(ImageSource.gallery),
+                  onPressed: () => _pickAndPreviewImage(ImageSource.gallery),
                 ),
               ],
             ),

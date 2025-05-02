@@ -11,7 +11,7 @@ class TextToImage extends StatefulWidget {
 }
 
 class _TextToImageState extends State<TextToImage> {
-  List<Uint8List> imageList = []; // Stores multiple images
+  List<Uint8List> imageList = [];
   bool isLoading = false;
   TextEditingController promptController = TextEditingController();
 
@@ -23,41 +23,75 @@ class _TextToImageState extends State<TextToImage> {
       return;
     }
 
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      imageList.clear();
+    });
 
     try {
-      List<Uint8List> generatedImages = await TextImageAPI.generateImages(promptController.text, 10);
+      List<Uint8List?> generatedImages = await TextImageAPI.generateImages(
+        promptController.text,
+        count: 2, // You can increase this to generate more
+      );
       setState(() {
-        imageList = generatedImages;
+        imageList = generatedImages.whereType<Uint8List>().toList();
       });
     } catch (e) {
       print("Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to generate images")),
-      );
     } finally {
       setState(() => isLoading = false);
     }
   }
 
-  void shareImage(Uint8List imageBytes) async {
+  Future<void> shareImage(Uint8List imageBytes) async {
     try {
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/generated_image.png');
+      final file = File('${tempDir.path}/shared_image.png');
       await file.writeAsBytes(imageBytes);
-      await Share.shareXFiles([XFile(file.path)], text: "Generated Image");
+      await Share.shareXFiles([XFile(file.path)], text: "Check out this AI-generated image!");
     } catch (e) {
       print("Error sharing image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to share image")),
+      );
     }
   }
 
   Future<void> saveImage(Uint8List imageBytes) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/generated_image.png';
-    final file = File(filePath);
-    await file.writeAsBytes(imageBytes);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Image saved at $filePath")),
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/generated_image_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File(filePath);
+      await file.writeAsBytes(imageBytes);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Image saved at $filePath")),
+      );
+    } catch (e) {
+      print("Error saving image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save image")),
+      );
+    }
+  }
+
+  void previewImage(Uint8List imageBytes) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.memory(imageBytes),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(icon: Icon(Icons.share), onPressed: () => shareImage(imageBytes)),
+                IconButton(icon: Icon(Icons.download), onPressed: () => saveImage(imageBytes)),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -65,7 +99,6 @@ class _TextToImageState extends State<TextToImage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        //backgroundColor: Color.fromARGB(255, 193, 147, 253),
         backgroundColor: Colors.deepPurple,
         title: Text(
           "Text-to-Image Generator",
@@ -95,34 +128,27 @@ class _TextToImageState extends State<TextToImage> {
             ),
             SizedBox(height: 16),
             isLoading
-                ? CircularProgressIndicator()
+                ? Center(child: CircularProgressIndicator())
                 : Expanded(
                     child: imageList.isNotEmpty
-                        ? ListView.builder(
+                        ? GridView.builder(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                            ),
                             itemCount: imageList.length,
                             itemBuilder: (context, index) {
-                              return Column(
-                                children: [
-                                  Image.memory(imageList[index]),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.share),
-                                        onPressed: () => shareImage(imageList[index]),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.download),
-                                        onPressed: () => saveImage(imageList[index]),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 10),
-                                ],
+                              return GestureDetector(
+                                onTap: () => previewImage(imageList[index]),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.memory(imageList[index], fit: BoxFit.cover),
+                                ),
                               );
                             },
                           )
-                        : Text("No images generated yet"),
+                        : Center(child: Text("No images generated yet")),
                   ),
           ],
         ),

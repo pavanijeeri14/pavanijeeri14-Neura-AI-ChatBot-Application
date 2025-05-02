@@ -1,16 +1,56 @@
-# llama_bot
+# Neura AI Chatbot 🤖✨
 
-A new Flutter project.
+A smart AI chatbot built using **Flutter**, **Firebase**, and **OpenAI API**.  
+It includes features like text/image-based queries, speech input, summarization, and more.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+- Conversational AI chatbot (OpenAI)
+- Image-to-text using ML Kit
+- Text-to-image using Lexica API
+- Text summarizer & content generator
+- Language translator
+- Voice-to-text & text-to-speech (speech module)
+- User authentication (Sign up / Sign in with Firebase)
+- Chat history stored in Firebase
+- Responsive UI with Lottie animations
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📱 Tech Stack
+
+- **Flutter**
+- **Dart**
+- **Firebase (Auth, Firestore, ML Kit)**
+- **OpenAI API**
+- **Google Translate API**
+- **Lexica API**
+
+---
+
+## 🧠 APIs Used
+
+| API          | Use Case                  |
+|--------------|---------------------------|
+| OpenAI       | AI Responses & Generation |
+| Firebase     | Auth + Firestore storage  |
+| ML Kit       | Image-to-Text (OCR)       |
+| Lexica       | Text-to-Image generation  |
+| Google Translate | Translation support   |
+
+---
+
+## 🛠 Packages Used
+
+```yaml
+# pubspec.yaml (only list important ones)
+http: ^0.13.4
+firebase_core: ^2.0.0
+firebase_auth: ^4.0.0
+cloud_firestore: ^4.0.0
+google_mlkit_text_recognition: ^0.4.0
+flutter_tts: ^3.5.2
+speech_to_text: ^5.4.0
+lottie: ^2.2.0

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:llama_bot/home.dart';
+//import 'package:llama_bot/screens/firebase%20screens/welcome_screen.dart';
 //import 'package:llama_bot/screens/firebase%20screens/register_screen.dart';
 import 'package:lottie/lottie.dart';
 
@@ -67,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Go to next screen
                   Navigator.pushReplacement(
                     context,
-                    //MaterialPageRoute(builder: (context) => RegisterScreen()),
+                    //MaterialPageRoute(builder: (context) => RegisterScreen()), WelcomeScreen
                     MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 } else {
@@ -100,8 +101,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class HomeScreenSignsPage {
-}
 
 // Reusable Onboarding Page Widget
 class OnboardingPage extends StatelessWidget {

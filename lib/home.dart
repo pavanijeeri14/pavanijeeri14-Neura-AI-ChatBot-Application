@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
         child: SingleChildScrollView( 
           child: Column(
             children: [
-              buildModuleCard(context, "Conversational Bot", "assets/lottie/bot.json", ChatScreen()),
+              buildModuleCard(context, "Conversational Bot", "assets/lottie/bot.json", ChatBotPage()),
               buildModuleCard(context, "Text-to-Image", "assets/lottie/image.json", TextToImage()),
               buildModuleCard(context, "Translator", "assets/lottie/translator.json", TranslatorScreen()),
               buildModuleCard(context, "Voice Interaction", "assets/lottie/voice.json", VoiceScreen()),
